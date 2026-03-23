@@ -20,11 +20,12 @@ export type AuthFilesPrefixProxyEditorModalProps = {
   onCopyText: (text: string) => void | Promise<void>;
   onSave: () => void;
   onChange: (field: PrefixProxyEditorField, value: PrefixProxyEditorFieldValue) => void;
+  onRandomizeFingerprint: () => void | Promise<void>;
 };
 
 export function AuthFilesPrefixProxyEditorModal(props: AuthFilesPrefixProxyEditorModalProps) {
   const { t } = useTranslation();
-  const { disableControls, editor, updatedText, dirty, onClose, onCopyText, onSave, onChange } =
+  const { disableControls, editor, updatedText, dirty, onClose, onCopyText, onSave, onChange, onRandomizeFingerprint } =
     props;
   const formatJsonText = (text: string) => {
     if (!text) return '';
@@ -164,6 +165,33 @@ export function AuthFilesPrefixProxyEditorModal(props: AuthFilesPrefixProxyEdito
                       onChange={(value) => onChange('websockets', value)}
                     />
                     <div className="hint">{t('ai_providers.codex_websockets_hint')}</div>
+                  </div>
+                )}
+                {editor.isClaudeFile && (
+                  <div className="form-group">
+                    <label>设备指纹 (Device Fingerprint)</label>
+                    {editor.fingerprint ? (
+                      <div style={{ fontSize: '12px', color: 'var(--color-text-secondary, #888)', marginBottom: '8px', fontFamily: 'monospace', lineHeight: '1.6' }}>
+                        <div>OS: {editor.fingerprint.os} / {editor.fingerprint.arch}</div>
+                        <div>UA: {editor.fingerprint.user_agent}</div>
+                        <div>Node: {editor.fingerprint.node_version}</div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '12px', color: 'var(--color-text-secondary, #888)', marginBottom: '8px' }}>
+                        未设置（自动分配）
+                      </div>
+                    )}
+                    <Button
+                      variant="secondary"
+                      onClick={() => { void onRandomizeFingerprint(); }}
+                      loading={editor.fingerprintRandomizing}
+                      disabled={disableControls || editor.saving || !editor.json}
+                    >
+                      {editor.fingerprintSaved ? '✓ 已随机化' : '🎲 随机化指纹'}
+                    </Button>
+                    <div className="hint" style={{ marginTop: '4px' }}>
+                      为此账号分配随机 macOS/Windows 设备指纹
+                    </div>
                   </div>
                 )}
               </div>

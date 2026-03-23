@@ -29,6 +29,10 @@ export type PrefixProxyEditorState = {
   fileName: string;
   fileInfoText: string;
   isCodexFile: boolean;
+  isClaudeFile: boolean;
+  fingerprint: { user_agent?: string; os?: string; arch?: string; node_version?: string; pkg_version?: string; } | null;
+  fingerprintRandomizing: boolean;
+  fingerprintSaved: boolean;
   loading: boolean;
   saving: boolean;
   error: string | null;
@@ -62,6 +66,7 @@ export type UseAuthFilesPrefixProxyEditorResult = {
     value: PrefixProxyEditorFieldValue
   ) => void;
   handlePrefixProxySave: () => Promise<void>;
+  handleRandomizeFingerprint: () => Promise<void>;
 };
 
 const buildPrefixProxyUpdatedText = (editor: PrefixProxyEditorState | null): string => {
@@ -137,6 +142,7 @@ export function useAuthFilesPrefixProxyEditor(
       .trim()
       .toLowerCase();
     const isCodexFile = normalizedType === 'codex' || normalizedProvider === 'codex';
+    const isClaudeFile = normalizedType === 'claude' || normalizedProvider === 'claude';
 
     if (disableControls) return;
     if (prefixProxyEditor?.fileName === name) {
@@ -148,6 +154,10 @@ export function useAuthFilesPrefixProxyEditor(
       fileName: name,
       fileInfoText: JSON.stringify(file, null, 2),
       isCodexFile,
+      isClaudeFile,
+      fingerprint: file.fingerprint ?? null,
+      fingerprintRandomizing: false,
+      fingerprintSaved: false,
       loading: true,
       saving: false,
       error: null,
@@ -296,6 +306,25 @@ export function useAuthFilesPrefixProxyEditor(
     }
   };
 
+  const handleRandomizeFingerprint = async () => {
+    if (!prefixProxyEditor) return;
+    const name = prefixProxyEditor.fileName;
+    setPrefixProxyEditor((prev) => prev ? { ...prev, fingerprintRandomizing: true } : prev);
+    try {
+      const result = await authFilesApi.randomizeFingerprint(name);
+      const fp = (result as { fingerprint?: { user_agent?: string; os?: string; arch?: string; node_version?: string; pkg_version?: string } }).fingerprint ?? null;
+      setPrefixProxyEditor((prev) => prev ? { ...prev, fingerprintRandomizing: false, fingerprintSaved: true, fingerprint: fp } : prev);
+      showNotification('指纹随机化成功', 'success');
+      setTimeout(() => {
+        setPrefixProxyEditor((prev) => prev ? { ...prev, fingerprintSaved: false } : prev);
+      }, 2000);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '';
+      showNotification(`指纹随机化失败: ${errorMessage}`, 'error');
+      setPrefixProxyEditor((prev) => prev ? { ...prev, fingerprintRandomizing: false } : prev);
+    }
+  };
+
   return {
     prefixProxyEditor,
     prefixProxyUpdatedText,
@@ -304,5 +333,6 @@ export function useAuthFilesPrefixProxyEditor(
     closePrefixProxyEditor,
     handlePrefixProxyChange,
     handlePrefixProxySave,
+    handleRandomizeFingerprint,
   };
 }

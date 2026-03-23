@@ -160,6 +160,7 @@ export function AuthFilesPage() {
     closePrefixProxyEditor,
     handlePrefixProxyChange,
     handlePrefixProxySave,
+    handleRandomizeFingerprint,
   } = useAuthFilesPrefixProxyEditor({
     disableControls: connectionStatus !== 'connected',
     loadFiles,
@@ -885,6 +886,7 @@ export function AuthFilesPage() {
         onCopyText={copyTextWithNotification}
         onSave={handlePrefixProxySave}
         onChange={handlePrefixProxyChange}
+        onRandomizeFingerprint={handleRandomizeFingerprint}
       />
 
       {batchActionBarVisible && typeof document !== 'undefined'

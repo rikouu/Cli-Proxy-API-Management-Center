@@ -30,6 +30,13 @@ export interface AuthFileItem {
   statusMessage?: string;
   lastRefresh?: string | number;
   modified?: number;
+  fingerprint?: {
+    user_agent?: string;
+    os?: string;
+    arch?: string;
+    node_version?: string;
+    pkg_version?: string;
+  };
   [key: string]: unknown;
 }
 

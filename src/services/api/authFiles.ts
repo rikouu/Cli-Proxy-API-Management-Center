@@ -6,6 +6,14 @@ import { apiClient } from './client';
 import type { AuthFilesResponse } from '@/types/authFile';
 import type { OAuthModelAliasEntry } from '@/types';
 
+export interface ClaudeFingerprintInfo {
+  user_agent?: string;
+  os?: string;
+  arch?: string;
+  node_version?: string;
+  pkg_version?: string;
+}
+
 type StatusError = { status?: number };
 type AuthFileStatusResponse = { status: string; disabled: boolean };
 type AuthFileEntry = AuthFilesResponse['files'][number];
@@ -333,6 +341,9 @@ export const authFilesApi = {
       ? (models as { id: string; display_name?: string; type?: string; owned_by?: string }[])
       : [];
   },
+
+  randomizeFingerprint: (name: string) =>
+    apiClient.post<{ status: string; fingerprint: ClaudeFingerprintInfo }>('/auth-files/randomize-fingerprint', { name }),
 
   // 获取指定 channel 的模型定义
   async getModelDefinitions(channel: string): Promise<{ id: string; display_name?: string; type?: string; owned_by?: string }[]> {
